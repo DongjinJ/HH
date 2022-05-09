@@ -56,13 +56,14 @@ class BBTAuto(QWidget):
         self.filterLabel = QLabel('필터용 파일명', self)
         self.filterLabel.move(670, 20)
 
-        # Filter Line Edit #
-        self.filterLineEdit = QLineEdit(self)
-        self.filterLineEdit.setGeometry(670, 50, 200, 30)
+        # Filter Combo Box #
+        self.filterComboBox = QComboBox(self)
+        self.filterComboBox.setGeometry(670, 50, 200, 30)
 
         # Filter Push Button #
-        self.filterPushButton = QPushButton('Browse', self)
+        self.filterPushButton = QPushButton('Filter Set', self)
         self.filterPushButton.setGeometry(880, 50, 100, 30)
+        self.filterPushButton.clicked.connect(self.filterFileSelect)
 
         # Calculation Push Button #
         self.calculationPushButton = QPushButton('Pin 기준 저항 계산', self)
@@ -88,12 +89,13 @@ class BBTAuto(QWidget):
         self.show()
 
     def sampleFileOpen(self):
-        fileDir = ''
-        fileDir = QFileDialog.getExistingDirectory(self, 'Select Sample Folder')
+        self.fileDir = ''
+        self.fileDir = QFileDialog.getExistingDirectory(self, 'Select Sample Folder')
 
-        if fileDir != '':
-            self.sampleLineEdit.setText(fileDir)
-            BBTAutoFunction.scanCSVFile(fileDir)
+        if self.fileDir != '':
+            self.sampleLineEdit.setText(self.fileDir)
+            csvList = BBTAutoFunction.scanCSVFile(self.fileDir)
+            self.filterComboBox.addItems(csvList)
 
     def targetFileOpen(self):
         fileDir = ''
@@ -108,6 +110,11 @@ class BBTAuto(QWidget):
 
         if fileDir != '':
             self.mergeLineEdit.setText(fileDir)
+
+    def filterFileSelect(self):
+        filterFile = self.filterComboBox.currentText()
+        self.logTextBrowser.append('Select CSV File: ' + filterFile)
+        BBTAutoFunction.scanTargetCSV(self.fileDir, filterFile)
 
 
 
