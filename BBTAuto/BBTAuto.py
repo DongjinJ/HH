@@ -1,7 +1,7 @@
 import sys
 import BBTAutoFunction
 from PyQt5.QtWidgets import *
-
+import os
 
 class BBTAuto(QWidget):
 
@@ -76,7 +76,8 @@ class BBTAuto(QWidget):
         # Vendor Combo Box #
         self.vendorComboBox = QComboBox(self)
         self.vendorComboBox.setGeometry(890, 130, 100, 30)
-        self.vendorComboBox.addItem('sec')
+        self.vendorComboBox.addItem('SEC')
+        self.vendorComboBox.addItem('Hynix')
 
         # Log Text Browser#
         self.logTextBrowser = QTextBrowser(self)
@@ -94,7 +95,12 @@ class BBTAuto(QWidget):
 
         if self.fileDir != '':
             self.sampleLineEdit.setText(self.fileDir)
+            self.logTextBrowser.append('>> Open sample Path ..')
             csvList = BBTAutoFunction.scanCSVFile(self.fileDir)
+            self.logTextBrowser.append(' => Complete Find CSV File\n')
+            self.logTextBrowser.append('-- CSV File List --')
+            for i in csvList:
+                self.logTextBrowser.append(' =>' + i)
             self.filterComboBox.addItems(csvList)
 
     def targetFileOpen(self):
@@ -102,6 +108,7 @@ class BBTAuto(QWidget):
         fileDir = QFileDialog.getExistingDirectory(self, 'Select Target Folder')
 
         if fileDir != '':
+            self.logTextBrowser.append('>> Open target Path ..')
             self.targetLineEdit.setText(fileDir)
 
     def mergeFileOpen(self):
@@ -113,8 +120,12 @@ class BBTAuto(QWidget):
 
     def filterFileSelect(self):
         filterFile = self.filterComboBox.currentText()
-        self.logTextBrowser.append('Select CSV File: ' + filterFile)
-        BBTAutoFunction.scanTargetCSV(self.fileDir, filterFile)
+        targetPath = self.targetLineEdit.text()
+        self.logTextBrowser.append('>> Select CSV File: ' + filterFile)
+        if os.path.isdir(self.fileDir) == True and os.path.isdir(targetPath):
+            BBTAutoFunction.scanTargetCSV(self.fileDir, filterFile, targetPath, self.logTextBrowser)
+        else:
+            self.logTextBrowser.append('! [Error]: Please Check sampleFile Path or targetFile Path')
 
 
 

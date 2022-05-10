@@ -1,6 +1,6 @@
 from audioop import findfactor
 import math
-import os, csv
+import os
 
 def scanCSVFile(filePath):
     fileList = os.listdir(filePath)
@@ -30,7 +30,7 @@ def scanCSVFile(filePath):
                     
     return fileCSVList
 
-def scanTargetCSV(filePath, fileName):
+def scanTargetCSV(filePath, fileName, targetFilePath, logBox):
     fileList = os.listdir(filePath)
     dataBuffer = []
     avgData = []
@@ -39,6 +39,7 @@ def scanTargetCSV(filePath, fileName):
     cutlineData = []
     filteredData = []
 
+
     for i in fileList:
         if os.path.isdir(filePath + '/' + i):
             subdirPath = filePath + '/' + i
@@ -46,79 +47,127 @@ def scanTargetCSV(filePath, fileName):
             for j in subdirList:
                 if (j.find(fileName) != -1):
                     targetPath = subdirPath + '/' + j
-                    print(targetPath)
+                    logBox.append(' => Find ' + targetPath + '\n')
                     collectData(targetPath, dataBuffer)
-                    print('Complete!')
-                    print(dataBuffer)
         else:
             if (i.find(fileName) != -1):
                 targetPath = subdirPath + '/' + i
-                print(targetPath)
+                logBox.append(' => Find ' + targetPath + '\n')
                 collectData(targetPath, dataBuffer)
-                print('Complete!')
-                print(dataBuffer)
+    convDataBuffer = list(map(list, zip(*dataBuffer)))
+    logBox.append(' => Success Scan CSV Data\n')
 
+    logBox.append('>> Calculating Average Value...')
+    avgData = calculationAverage(convDataBuffer)
+    logBox.append(' => Success!\n')
+
+    logBox.append('>> Calculating Variance Value...')
+    varianceData = calculationVariance(convDataBuffer, avgData)
+    logBox.append(' => Success!\n')
+
+    logBox.append('>> Calculating Standard Value...')
+    standardData = calculationStandard(varianceData)
+    logBox.append(' => Success!\n')
+    
+    logBox.append('>> Calculating Cutline Value...')
+    cutlineData = calculationCutlineData(avgData, standardData)
+    logBox.append(' => Success!\n')
+
+    logBox.append('>> Filtering Data')
+    filteredData = filterData(convDataBuffer, cutlineData)
+    logBox.append(' => Success!\n')
+    
+    logBox.append('>> Save Filtered Data')
+    savePath = targetFilePath + '/target_' + fileName
+    logBox.append('>> Save Path: ' + savePath)
+    targetFile = open(savePath, 'w')
+    for i in range(len(filteredData)):
+        for j in range(len(filteredData[i])):
+            targetFile.write(filteredData[i][j] + ',')
+        targetFile.write('\n')
+    targetFile.close()
+    logBox.append(' => Complete save File\n')
+
+def calculationAverage(dataBuffer):
+    avgData = []
     # Calculate Average #
     tempLabel = ''
     tempAvg = 0.0
-    for i in range(0, len(dataBuffer[0])):
-        for j in range(0, len(dataBuffer)):
-            if(j == 0):
-                tempLabel = dataBuffer[j][i]
-            else:
-                tempAvg += float(dataBuffer[j][i])
-        tempAvg = tempAvg / (len(dataBuffer) - 1) 
-        print(tempLabel, tempAvg)
+    for i in range(len(dataBuffer)):
+        tempLabel = dataBuffer[i][0]
+        for j in range(1, len(dataBuffer[i])):
+            tempAvg += float(dataBuffer[i][j])
+        tempAvg = tempAvg / (len(dataBuffer[i]) - 1)
         avgData.append([tempLabel, tempAvg])
-        tempLabel = ''
         tempAvg = 0.0
+
+    print('평균 값 계산')
     print(avgData)
 
-    # Calculate Variance #
-    tempVariance = 0.0
-    for i in range(0, len(dataBuffer[0])):
-        for j in range(0, len(dataBuffer)):
-            if(j == 0):
-                tempLabel = dataBuffer[j][i]
-            else:
-                tempVariance = tempVariance + (float(dataBuffer[j][i]) - avgData[i][1]) ** 2
-        tempVariance = tempVariance / (len(dataBuffer) - 1) 
-        print('tempVar: ', tempVariance)
+    return avgData
 
-        print(tempLabel, tempVariance)
+def calculationVariance(dataBuffer, avgData):
+    varianceData = []
+
+    # Calculate Variance #
+    tempLabel = ''
+    tempVariance = 0.0
+    for i in range(len(dataBuffer)):
+        tempLabel = dataBuffer[i][0]
+        for j in range(1, len(dataBuffer[i])):
+            tempVariance = tempVariance + (float(dataBuffer[i][j]) - avgData[i][1]) ** 2
+        tempVariance = tempVariance / (len(dataBuffer[i]) - 1) 
         varianceData.append([tempLabel, tempVariance])
-        tempLabel = ''
         tempVariance = 0.0
+    
+    print('분산 값 계산')
     print(varianceData)
 
+    return varianceData
+
+def calculationStandard(varianceData):
+    standardData = []
     # Calculate Standard #
     tempStandard = 0.0
     for i in range(0, len(varianceData)):
         tempStandard = math.sqrt(varianceData[i][1])
         standardData.append([varianceData[i][0], tempStandard])
+
+    print('표준편차 계산')
     print(standardData)
 
+    return standardData
+
+def calculationCutlineData(avgData, standardData):
+    cutlineData = []
     # Calculate Cutline #
     tempCutline = 0.0
     for i in range(0, len(standardData)):
         tempCutline = avgData[i][1] + 3 * standardData[i][1]
-        cutlineData.append([varianceData[i][0], tempCutline])
+        cutlineData.append([standardData[i][0], tempCutline])
+
+    print('Cutline 기준 계산')
     print(cutlineData)
 
-    # Filter Data #
-    filteredData.append([dataBuffer[0]])
-    tempArray = []
-    for i in range(1, len(dataBuffer)):
-        for j in range(0, len(dataBuffer[i])):
-            if float(dataBuffer[i][j]) <= cutlineData[j][1]:
-                tempArray.append(dataBuffer[i][j])
-        
+    return cutlineData
 
-    mergedFile = open("merged_" + fileName + ".csv", 'w')
-    for i in range(len(avgData)):
-        writeData = avgData[i][0] + ',' + str(avgData[i][1]) + '\n'
-        mergedFile.write(writeData)
-    mergedFile.close()
+def filterData(dataBuffer, cutlineData):
+    filteredData = []
+
+    # Filter Data #
+    tempArray = []
+    for i in range(len(dataBuffer)):
+        tempArray = dataBuffer[i]
+        for j in range(len(dataBuffer[i])-1, 0):
+            if (float(tempArray[j]) >= cutlineData[i][1]):
+                del tempArray[j]
+        filteredData.append(tempArray)
+    
+    print('-- Filtered Data --')
+    print(filteredData)
+
+    return filteredData
+
 
 def collectData(targetPath, dataBuffer):
     try:
