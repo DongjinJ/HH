@@ -83,7 +83,12 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox):
     targetFile = open(savePath, 'w')
     for i in range(len(filteredData)):
         for j in range(len(filteredData[i])):
-            targetFile.write(filteredData[i][j] + ',')
+            if(j == 0):
+                writeHeader = '"\'' + filteredData[i][j] + '",'
+                print(writeHeader)
+                targetFile.write('"\'' + filteredData[i][j] + '",')
+            else:
+                targetFile.write(filteredData[i][j] + ',')
         targetFile.write('\n')
     targetFile.close()
     logBox.append(' => Complete save File\n')
@@ -164,7 +169,7 @@ def filterData(dataBuffer, cutlineData):
         filteredData.append(tempArray)
     
     print('-- Filtered Data --')
-    print(filteredData)
+    #print(filteredData)
 
     return filteredData
 
@@ -177,15 +182,21 @@ def collectData(targetPath, dataBuffer):
         line = csvFile.readline()
         if(len(dataBuffer) == 0):
             line = line.replace('\n', '')
+            line = line.replace(' ', '')
+            line = line.replace('"', ' ')
             print(line)
-            dataBuffer.append(line.split(','))
+            tempList = line.split(' , ')
+            header = []
+            for i in tempList:
+                header.append(i.replace(' ', ''))
+            dataBuffer.append(header)
             
         while True:
             line = csvFile.readline()
             if not line:
                 break
             line = line.replace('\n', '')
-            print(line)
+            #print(line)
             dataBuffer.append(line.split(','))
         csvFile.close()
     except:
