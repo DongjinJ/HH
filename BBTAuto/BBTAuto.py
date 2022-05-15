@@ -1,6 +1,9 @@
 import sys
 import BBTAutoFunction
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import *
+import psutil
 import os
 
 class BBTAuto(QWidget):
@@ -79,15 +82,35 @@ class BBTAuto(QWidget):
         self.vendorComboBox.addItem('SEC')
         self.vendorComboBox.addItem('Hynix')
 
-        # Log Text Browser#
+        # Memory Label #
+        self.memoryLabel = QLabel('Memory', self)
+        self.memoryLabel.move(890, 180)
+
+        # Memory Progress Bar #
+        self.memoryProgressBar = QProgressBar(self)
+        self.memoryProgressBar.setGeometry(890, 200, 100, 20)
+
+        # Log Text Browser #
         self.logTextBrowser = QTextBrowser(self)
         self.logTextBrowser.setGeometry(20, 270, 960, 250)
         self.logTextBrowser.append('-- BBT Auto Version 1.0 --')
 
+        # Timer #
+        self.timer = QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.periodicTask)
+        self.timer.start()
+
         self.setWindowTitle('BBTAuto v1.0')
         self.move(300, 300)
-        self.resize(1000, 540)
+        self.setFixedSize(1000, 540)
         self.show()
+
+    def periodicTask(self):
+        # AFTER  code
+        memory_usage_dict = dict(psutil.virtual_memory()._asdict())
+        memory_usage_percent = memory_usage_dict['percent']
+        self.memoryProgressBar.setValue(int(memory_usage_percent))
 
     def sampleFileOpen(self):
         self.fileDir = ''
