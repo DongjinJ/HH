@@ -144,12 +144,13 @@ class BBTAuto(QWidget):
     def filterFileSelect(self):
         filterFile = self.filterComboBox.currentText()
         targetPath = self.targetLineEdit.text()
+        mergedPath = self.mergeLineEdit.text()
+        vendor = self.vendorComboBox.currentText()
         self.logTextBrowser.append('>> Select CSV File: ' + filterFile)
-        if os.path.isdir(self.fileDir) == True and os.path.isdir(targetPath):
-            BBTAutoFunction.scanTargetCSV(self.fileDir, filterFile, targetPath, self.logTextBrowser)
+        if os.path.isdir(self.fileDir) == True and os.path.isdir(targetPath) == True and os.path.isdir(mergedPath):
+            BBTAutoFunction.scanTargetCSV(self.fileDir, filterFile, targetPath, self.logTextBrowser, vendor, mergedPath)
         else:
             self.logTextBrowser.append('! [Error]: Please Check sampleFile Path or targetFile Path')
-
 
 
 if __name__ == '__main__':

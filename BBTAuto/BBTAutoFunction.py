@@ -30,7 +30,7 @@ def scanCSVFile(filePath):
                     
     return fileCSVList
 
-def scanTargetCSV(filePath, fileName, targetFilePath, logBox):
+def scanTargetCSV(filePath, fileName, targetFilePath, logBox, vendor, mergedPath):
     fileList = os.listdir(filePath)
     dataBuffer = []
     avgData = []
@@ -56,6 +56,7 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox):
                 collectData(targetPath, dataBuffer)
     convDataBuffer = list(map(list, zip(*dataBuffer)))
     logBox.append(' => Success Scan CSV Data\n')
+    print(convDataBuffer)
 
     logBox.append('>> Calculating Average Value...')
     avgData = calculationAverage(convDataBuffer)
@@ -92,6 +93,65 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox):
         targetFile.write('\n')
     targetFile.close()
     logBox.append(' => Complete save File\n')
+
+    calculationResultData(filteredData, vendor, logBox, mergedPath, fileName)
+
+def calculationResultData(dataBuffer, vendor, logBox, mergedPath, fileName):
+    resultData = []
+    if vendor == 'SEC':
+        logBox.append('>> SEC 기준 결과값 산출 중..')
+        resultAvg = calculationAverage(dataBuffer)
+        resultVariance = calculationVariance(dataBuffer, resultAvg)
+        resultSigma = calculationStandard(resultVariance)
+        for i in range(len(resultAvg)):
+            curAvg = resultAvg[i][1]
+            curSigma = resultSigma[i][1]
+            if curAvg < 30:
+                calValue = curAvg + 20
+            elif curAvg >= 30 and curAvg <= 100:
+                calValue = curAvg * 1.8
+            elif curAvg > 100 and curAvg <= 1000:
+                calValue = curAvg + 5 * curSigma
+            elif curAvg > 1000 and curAvg <= 1500:
+                calValue = curAvg + 4.7 * curSigma
+            else:
+                calValue = curAvg + 4.5 * curSigma
+            resultData.append([resultAvg[i][0], calValue])
+
+    elif vendor == 'Hynix':
+        logBox.append('>> Hynix 기준 결과값 산출 중..')
+        resultAvg = calculationAverage(dataBuffer)
+        resultVariance = calculationVariance(dataBuffer, resultAvg)
+        resultSigma = calculationStandard(resultVariance)
+        for i in range(len(resultAvg)):
+            curAvg = resultAvg[i][1]
+            curSigma = resultSigma[i][1]
+            if curAvg < 30:
+                calValue = curAvg + 20
+            elif curAvg >= 30 and curAvg <= 100:
+                calValue = curAvg * 1.8
+            else:
+                calValue = curAvg + 6 * curSigma
+            resultData.append([resultAvg[i][0], calValue])
+    else:
+        logBox.append('! [Error]: 계산 기준 Vendor Option 확인 필요')
+    
+    logBox.append('>> Save Result Data')
+    savePath = mergedPath + '/target_' + fileName
+    logBox.append('>> Save Path: ' + savePath)
+    targetFile = open(savePath, 'w')
+    for i in range(len(resultData)):
+        for j in range(len(resultData[i])):
+            if(j == 0):
+                writeHeader = '"\'' + resultData[i][j] + '",'
+                print(writeHeader)
+                targetFile.write('"\'' + resultData[i][j] + '",')
+            else:
+                targetFile.write(str(resultData[i][j]) + ',')
+        targetFile.write('\n')
+    targetFile.close()
+    logBox.append(' => Complete save File\n')
+
 
 def calculationAverage(dataBuffer):
     avgData = []
