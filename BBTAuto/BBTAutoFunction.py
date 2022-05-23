@@ -80,16 +80,25 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox, vendor, mergedPath
     
     logBox.append('>> Save Filtered Data')
     savePath = targetFilePath + '/target_' + fileName
+    save_standard_Path = targetFilePath + '/target_standard_' + fileName
     logBox.append('>> Save Path: ' + savePath)
     targetFile = open(savePath, 'w')
+    target_standard_File = open(save_standard_Path, 'w')
     for i in range(len(filteredData)):
         for j in range(len(filteredData[i])):
             if(j == 0):
                 writeHeader = '"\'' + filteredData[i][j] + '",'
                 print(writeHeader)
                 targetFile.write('"\'' + filteredData[i][j] + '",')
+                target_standard_File.write('"\'' + filteredData[i][j] + '",')
+
             else:
                 targetFile.write(filteredData[i][j] + ',')
+                if(j == 1):
+                    target_standard_File.write(str(avgData[i][j]) + ',')
+                    target_standard_File.write(str(standardData[i][j]) + ',')
+                    target_standard_File.write(str(cutlineData[i][j]) + ',')
+                    target_standard_File.write('\n')
         targetFile.write('\n')
     targetFile.close()
     logBox.append(' => Complete save File\n')
