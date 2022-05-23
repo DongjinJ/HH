@@ -101,7 +101,7 @@ class BBTAuto(QWidget):
         self.timer.timeout.connect(self.periodicTask)
         self.timer.start()
 
-        self.setWindowTitle('BBTAuto v1.0')
+        self.setWindowTitle('BBTAuto v1.1')
         self.move(300, 300)
         self.setFixedSize(1000, 540)
         self.show()

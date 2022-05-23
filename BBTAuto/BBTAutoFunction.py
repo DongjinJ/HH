@@ -56,7 +56,6 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox, vendor, mergedPath
                 collectData(targetPath, dataBuffer)
     convDataBuffer = list(map(list, zip(*dataBuffer)))
     logBox.append(' => Success Scan CSV Data\n')
-    print(convDataBuffer)
 
     logBox.append('>> Calculating Average Value...')
     avgData = calculationAverage(convDataBuffer)
@@ -88,7 +87,6 @@ def scanTargetCSV(filePath, fileName, targetFilePath, logBox, vendor, mergedPath
         for j in range(len(filteredData[i])):
             if(j == 0):
                 writeHeader = '"\'' + filteredData[i][j] + '",'
-                print(writeHeader)
                 targetFile.write('"\'' + filteredData[i][j] + '",')
                 target_standard_File.write('"\'' + filteredData[i][j] + '",')
 
@@ -153,7 +151,6 @@ def calculationResultData(dataBuffer, vendor, logBox, mergedPath, fileName):
         for j in range(len(resultData[i])):
             if(j == 0):
                 writeHeader = '"\'' + resultData[i][j] + '",'
-                print(writeHeader)
                 targetFile.write('"\'' + resultData[i][j] + '",')
             else:
                 targetFile.write(str(resultData[i][j]) + ',')
@@ -175,9 +172,6 @@ def calculationAverage(dataBuffer):
         avgData.append([tempLabel, tempAvg])
         tempAvg = 0.0
 
-    print('평균 값 계산')
-    print(avgData)
-
     return avgData
 
 def calculationVariance(dataBuffer, avgData):
@@ -193,9 +187,6 @@ def calculationVariance(dataBuffer, avgData):
         tempVariance = tempVariance / (len(dataBuffer[i]) - 1) 
         varianceData.append([tempLabel, tempVariance])
         tempVariance = 0.0
-    
-    print('분산 값 계산')
-    print(varianceData)
 
     return varianceData
 
@@ -207,9 +198,6 @@ def calculationStandard(varianceData):
         tempStandard = math.sqrt(varianceData[i][1])
         standardData.append([varianceData[i][0], tempStandard])
 
-    print('표준편차 계산')
-    print(standardData)
-
     return standardData
 
 def calculationCutlineData(avgData, standardData):
@@ -220,9 +208,6 @@ def calculationCutlineData(avgData, standardData):
         tempCutline = avgData[i][1] + 3 * standardData[i][1]
         cutlineData.append([standardData[i][0], tempCutline])
 
-    print('Cutline 기준 계산')
-    print(cutlineData)
-
     return cutlineData
 
 def filterData(dataBuffer, cutlineData):
@@ -232,9 +217,13 @@ def filterData(dataBuffer, cutlineData):
     tempArray = []
     for i in range(len(dataBuffer)):
         tempArray = dataBuffer[i]
-        for j in range(len(dataBuffer[i])-1, 0):
+        print(len(dataBuffer[i])-1)
+        for j in range(len(dataBuffer[i])-1, 0, -1):
             if (float(tempArray[j]) >= cutlineData[i][1]):
+                #print('cutline: ', cutlineData[i][1])
+                #print('currentData: ', tempArray[j])
                 del tempArray[j]
+ 
         filteredData.append(tempArray)
     
     print('-- Filtered Data --')
@@ -253,7 +242,6 @@ def collectData(targetPath, dataBuffer):
             line = line.replace('\n', '')
             line = line.replace(' ', '')
             line = line.replace('"', ' ')
-            print(line)
             tempList = line.split(' , ')
             header = []
             for i in tempList:
