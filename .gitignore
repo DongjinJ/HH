@@ -1,0 +1,6 @@
+BBTAuto/dist/*
+BBTAuto/build/*
+BBTAuto/build/BBTAuto/*
+
+*.pyc
+*.pyz
